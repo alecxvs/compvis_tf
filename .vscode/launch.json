@@ -8,14 +8,14 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "console": "integratedTerminal",
+            "console": "internalConsole",
             "program": "${file}"
         },
         {
             "name": "Python cProfile: Current File",
             "type": "python",
             "request": "launch",
-            "console": "integratedTerminal",
+            "console": "internalConsole",
             "module": "cProfile",
             "args": [
                 "-s",
