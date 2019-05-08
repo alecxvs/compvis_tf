@@ -22,7 +22,6 @@ pd_columns = ["filename", "label"]
 
 train_images_labels = pandas.DataFrame(columns=pd_columns)
 
-print("Gathering images...")
 oddset = 0
 label_path: pathlib.PosixPath
 for i, label_path in enumerate(pathlib.Path("./NWPU-RESISC45").iterdir()):
@@ -41,6 +40,7 @@ training_sample: pandas.DataFrame = train_images_labels.sample(frac=1).reset_ind
 img_tensors = []
 
 
+print("Preparing dataset...")
 def process_image(image_path, label):
     img = tf.io.read_file(image_path)
     decoded_img = tf.io.decode_image(img, channels=3)
@@ -50,18 +50,20 @@ def process_image(image_path, label):
 
 
 ds = tf.data.Dataset.from_tensor_slices((list(training_sample['filename']), list(training_sample['label'])))
-ds = ds.map(process_image, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+ds = ds.map(process_image, num_parallel_calls=8)
 ds = ds.batch(8)
 ds = ds.shuffle(len(training_sample))
 
 training_num = num_img*num_cat
 trained = 0
 
+print("Initializing TensorFlow session")
 sess = session.Session()
 with sess.as_default():
     tf.graph_util.import_graph_def(graph_def, name='')
 
     operations: List[Type[tf.Operation]] = sess.graph.get_operations()
+    print("    Extracting features to features.p:")
     with io.open("features.p", "wb") as fout:
         for img, label in iter(ds):
             feat = sess.run('fc8/fc8:0', {'Placeholder:0': img.numpy()})
