@@ -4,6 +4,7 @@ import pandas
 import io
 import pickle
 from tensorflow.core.framework import graph_pb2
+from tensorflow.python.framework import ops
 from tensorflow.python.client import session
 from typing import Type, List
 GRAPH_PB_PATH = './alexnet_frozen.pb'
@@ -41,6 +42,8 @@ img_tensors = []
 
 
 print("Preparing dataset...")
+
+
 def process_image(image_path, label):
     img = tf.io.read_file(image_path)
     decoded_img = tf.io.decode_image(img, channels=3)
@@ -68,8 +71,8 @@ with sess.as_default():
         for img, label in iter(ds):
             feat = sess.run('fc8/fc8:0', {'Placeholder:0': img.numpy()})
             for i, l in enumerate(label):
-                pickle.dump((feat[i], l), fout)
+                pickle.dump((feat[i], l.numpy()), fout)
             trained += len(label)
-            print(f"Processed batch of 8 ({trained} of {training_num})")
+            print(f"Processed batch of {len(label)} ({trained} of {training_num})")
 
 sess.close()
