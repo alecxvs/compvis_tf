@@ -2,11 +2,10 @@ import pandas
 import io
 import pickle
 import time
-import math
 import numpy as np
-from datetime import datetime
 from sklearn import decomposition, discriminant_analysis
 from sklearn.svm import SVC
+from sklearn.neighbors import KDTree
 from scipy.spatial.distance import cdist
 from functools import reduce
 
@@ -71,16 +70,27 @@ mAP = query_mAP(train_lda, test_lda, train_labels, test_labels)
 clock_perf(runtime, f"Query mAP performance based on test item vs. top 10 nearest training items: {mAP}")
 
 # Now do SVM classification
-print(f"> Fitting SVM...")
-svm = SVC(gamma="scale").fit(train_data, train_labels)
-clock_perf(runtime, "Finished")
+# print(f"> Fitting SVM...")
+# svm = SVC(gamma="scale").fit(train_data, train_labels)
+# clock_perf(runtime, "Finished")
 
-print("> Measuring accuracy of training data on SVM")
-svm_train_score = svm.score(train_data, train_labels)
-clock_perf(runtime, f"SVM training accuracy score: {svm_train_score}")
+# print("> Measuring accuracy of training data on SVM...")
+# svm_train_score = svm.score(train_data, train_labels)
+# clock_perf(runtime, f"SVM training accuracy score: {svm_train_score}")
 
-print("> Measuring accuracy of test data on SVM")
-svm_test_score = svm.score(test_data, test_labels)
-clock_perf(runtime, f"SVM training accuracy score: {svm_test_score}")
+# print("> Measuring accuracy of test data on SVM...")
+# svm_test_score = svm.score(test_data, test_labels)
+# clock_perf(runtime, f"SVM test accuracy score: {svm_test_score}")
 
 # Now do PCA+LDA+KD-Tree
+print("> Building a KD-Tree from LDA data...")
+tree = KDTree(train_lda)
+clock_perf(runtime, "Finished")
+d, indexes = tree.query(test_lda, k=10)
+
+ap = np.zeros(len(indexes))
+for i, top_idx in enumerate(indexes):
+    n = reduce(lambda c, label: c + int(label == test_labels[i]), train_labels[top_idx], 0)
+    ap[i] = n/10
+tree_query_map = np.mean(ap)
+clock_perf(runtime, f"Query mAP performance of KD-Tree: {tree_query_map}")
