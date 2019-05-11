@@ -1,10 +1,5 @@
 if __name__ == "__main__":
     from tensorflow.python import keras
-    import tensorflow as tf
-    import numpy as np
-    import random
-    import os
-    import sys
     import platform
     import pathlib
     import pandas
@@ -47,6 +42,7 @@ if __name__ == "__main__":
 
     training_gen = img_gen.flow_from_dataframe(
         train_images_labels,
+        batch_size=32,
         class_mode="sparse",
         y_col="class"
     )
@@ -73,33 +69,24 @@ if __name__ == "__main__":
         "kernel_regularizer": keras.regularizers.l1(0.01)
     }
 
-    # @tf.function
-    # def triplet_loss(labels, embeddings):
-    #     labels = tf.reshape(labels, [-1])
-    #     tf.print("labels: ", labels)
-    #     tf.print("embed: ", embeddings, summarize=-1)
-    #     loss = tfa.losses.triplet_semihard_loss(labels, embeddings)
-    #     # loss = keras.losses.sparse_categorical_crossentropy(labels, embeddings)
-    #     tf.print(loss)
-    #     return loss
-
     print("Building network model...")
     model = keras.Sequential()
     model.add(keras.layers.Conv2D(32, **conv_args, input_shape=(256,256,3)))
     model.add(keras.layers.MaxPooling2D())
     model.add(keras.layers.Conv2D(32, **conv_args))
     model.add(keras.layers.MaxPooling2D())
-    model.add(keras.layers.Dropout(0.25))
+    # model.add(keras.layers.Dropout(0.25))
     model.add(keras.layers.Conv2D(32, **conv_args))
     model.add(keras.layers.MaxPooling2D())
     model.add(keras.layers.Conv2D(32, **conv_args))
     model.add(keras.layers.MaxPooling2D())
-    model.add(keras.layers.Dropout(0.25))
+    # model.add(keras.layers.Dropout(0.25))
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(128))
-    model.add(keras.layers.Dense(128))
+    model.add(keras.layers.Dense(4096))
+    model.add(keras.layers.Dropout(0.5))
+    model.add(keras.layers.Dense(4096))
     model.add(keras.layers.Dense(num_cat, activation="softmax"))
-    model.compile(keras.optimizers.Adam(lr=0.001, amsgrad=True), loss=keras.losses.sparse_categorical_crossentropy, metrics=['accuracy'])
+    model.compile(keras.optimizers.Adam(amsgrad=True), loss=keras.losses.sparse_categorical_crossentropy, metrics=['accuracy'])
 
     model.summary()
 
