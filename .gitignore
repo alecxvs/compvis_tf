@@ -106,3 +106,4 @@ venv.bak/
 .DS_Store
 run.profile
 NWPU-RESISC45/
+*.zip
