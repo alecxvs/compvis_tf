@@ -2,9 +2,10 @@ if __name__ == "__main__":
     from tensorflow.python import keras
     import tensorflow as tf
     import numpy as np
-    import random
-    import os
-    import sys
+    import triplet_loss
+    import pickle
+    import io
+    from sklearn.neighbors import KDTree
     import platform
     import pathlib
     import pandas
@@ -65,6 +66,13 @@ if __name__ == "__main__":
         y_col="class"
     )
 
+    print("Load, initialize KD-Tree Triplet Loss...")
+    kdtree: KDTree
+    with io.open("kdtree.p", "rb") as f:
+        kdtree = pickle.load(f)
+
+    lossman = triplet_loss.KDTreeTripletLoss(kdtree, train_images_labels['class'])
+
     conv_args = {
         "kernel_size": 3,
         "bias_initializer": "zeros",
@@ -99,7 +107,7 @@ if __name__ == "__main__":
     model.add(keras.layers.Dense(128))
     model.add(keras.layers.Dense(128))
     model.add(keras.layers.Dense(num_cat, activation="softmax"))
-    model.compile(keras.optimizers.Adam(lr=0.001, amsgrad=True), loss=keras.losses.sparse_categorical_crossentropy, metrics=['accuracy'])
+    model.compile(keras.optimizers.Adam(lr=0.001, amsgrad=True), loss=lossman.kdtree_triplet_loss, metrics=['accuracy'])
 
     model.summary()
 
